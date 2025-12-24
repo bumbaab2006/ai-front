@@ -12,7 +12,7 @@ export default function IngredientRecognition() {
     setResult("");
 
     try {
-      const res = await fetch("http://localhost:5000/ingredient", {
+      const res = await fetch("https://ai-back-h30s.onrender.com/ingredient", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dish }),

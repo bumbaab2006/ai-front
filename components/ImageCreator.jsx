@@ -14,11 +14,14 @@ export default function ImageCreator() {
     setImageUrl("");
 
     try {
-      const res = await fetch("http://localhost:5000/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description }),
-      });
+      const res = await fetch(
+        "https://ai-back-h30s.onrender.com/generate-image",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

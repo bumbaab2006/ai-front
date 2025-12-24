@@ -15,7 +15,7 @@ export default function ImageUploader() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("http://localhost:5000/analyze", {
+      const res = await fetch("https://ai-back-h30s.onrender.com/analyze", {
         method: "POST",
         body: formData,
       });

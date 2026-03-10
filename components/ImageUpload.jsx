@@ -1,53 +1,105 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ResultCard from "./ResultCard";
+import { getApiUrl, parseJsonResponse } from "@/lib/api";
 
 export default function ImageUploader() {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
 
   const uploadImage = async (file) => {
     setLoading(true);
     setResult("");
+    setError("");
 
     try {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("https://ai-back-h30s.onrender.com/analyze", {
+      const res = await fetch(getApiUrl("/analyze"), {
         method: "POST",
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
+      const data = await parseJsonResponse(res);
       setResult(data.text);
     } catch (e) {
-      alert(e.message);
+      setError(e.message || "Failed to analyze image.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="border border-gray-400 rounded-xl p-5 w-full max-w-md bg-white shadow-sm">
-      <p className="text-sm font-semibold mb-2 text-gray-400">Image analysis</p>
+    <div className="feature-card">
+      <div className="feature-header">
+        <div>
+          <h2 className="feature-title">Image Analysis</h2>
+          <p className="feature-description">
+            Upload a food photo and extract ingredient hints from the image.
+          </p>
+        </div>
+        <span className="subtle-badge">Gemini Vision</span>
+      </div>
+
       <input
         type="file"
         accept="image/*"
+        disabled={loading}
+        className="file-input"
         onChange={(e) => {
-          const file = e.target.files[0];
+          const file = e.target.files?.[0];
           if (!file) return;
+
+          if (preview) {
+            URL.revokeObjectURL(preview);
+          }
+
           setPreview(URL.createObjectURL(file));
           uploadImage(file);
         }}
-        className="text-sm text-gray-400"
       />
-      {preview && <img src={preview} className="mt-3 rounded-lg w-full" />}
-      {loading && <p className="mt-2 text-xs text-gray-500">Analyzing...</p>}
-      <ResultCard text={result} />
+
+      <div className="helper-row">
+        <span className="meta-text">PNG, JPG, WEBP and other image formats.</span>
+        {loading && (
+          <span className="loading-pill" aria-live="polite">
+            <span className="dot" />
+            <span className="dot" />
+            <span className="dot" />
+            Analyzing
+          </span>
+        )}
+      </div>
+
+      {preview && (
+        <div className="preview-shell">
+          <img
+            src={preview}
+            alt="Preview of the uploaded image"
+            className="preview-image"
+          />
+        </div>
+      )}
+
+      {error && (
+        <div className="inline-error" role="alert">
+          {error}
+        </div>
+      )}
+
+      <ResultCard text={result} label="Analysis" />
     </div>
   );
 }

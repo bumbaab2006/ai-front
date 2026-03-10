@@ -1,10 +1,19 @@
-"use client";
 import Tabs from "@/components/Tabs";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#4A4A4A] flex justify-center py-16">
-      <div className="w-full max-w-4xl bg-white rounded-2xl px-12 py-10">
+    <main className="app-shell">
+      <div className="app-panel">
+        <div className="hero-copy">
+          <span className="eyebrow">AI Food Studio</span>
+          <h1 className="hero-title">
+            Clean tools for food prompts, ingredients, and image analysis.
+          </h1>
+          <p className="hero-description">
+            A minimal workspace for testing the flows quickly without jumping
+            between separate screens.
+          </p>
+        </div>
         <Tabs />
       </div>
     </main>

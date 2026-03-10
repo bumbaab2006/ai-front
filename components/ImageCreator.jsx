@@ -1,68 +1,91 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import { useState } from "react";
 import ResultCard from "./ResultCard";
+import { getApiUrl, parseJsonResponse } from "@/lib/api";
 
 export default function ImageCreator() {
   const [description, setDescription] = useState("");
   const [prompt, setPrompt] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const generate = async () => {
+    const trimmedDescription = description.trim();
+    if (!trimmedDescription) return;
+
     setLoading(true);
     setPrompt("");
     setImageUrl("");
+    setError("");
 
     try {
-      const res = await fetch(
-        "https://ai-back-h30s.onrender.com/generate-image",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ description }),
-        }
-      );
+      const res = await fetch(getApiUrl("/generate-image"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: trimmedDescription }),
+      });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
+      const data = await parseJsonResponse(res);
       setPrompt(data.prompt);
       setImageUrl(data.imageUrl);
     } catch (e) {
-      alert(e.message);
+      setError(e.message || "Failed to generate image.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="border border-gray-400 rounded-xl p-5 w-full max-w-md bg-white shadow-sm">
-      <p className="text-sm font-semibold mb-2 text-gray-400">Image creator</p>
+    <div className="feature-card">
+      <div className="feature-header">
+        <div>
+          <h2 className="feature-title">Image Creator</h2>
+          <p className="feature-description">
+            Generate a food scene from a short prompt and preview it immediately.
+          </p>
+        </div>
+        <span className="subtle-badge">Stable Diffusion</span>
+      </div>
 
       <textarea
-        rows={3}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Describe food or scene"
-        className="border rounded-md p-2 w-full text-sm mb-4 border-gray-400 text-gray-600"
+        placeholder="Describe the food, plating, mood, and lighting."
+        className="textarea-field"
       />
 
-      <button
-        onClick={generate}
-        className="bg-gray-600 text-white px-4 py-1.5 rounded-md text-sm"
-        disabled={loading}
-      >
-        {loading ? "Generating..." : "Generate Image"}
-      </button>
+      <div className="helper-row">
+        <span className="meta-text">
+          Short prompts usually return cleaner results than long paragraphs.
+        </span>
+        <button
+          type="button"
+          onClick={generate}
+          className="primary-button"
+          disabled={loading || !description.trim()}
+        >
+          {loading ? "Generating..." : "Generate Image"}
+        </button>
+      </div>
 
-      {prompt && <ResultCard text={prompt} />}
+      {error && (
+        <div className="inline-error" role="alert">
+          {error}
+        </div>
+      )}
+
+      {prompt && <ResultCard text={prompt} label="Prompt" />}
 
       {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Generated"
-          className="mt-4 w-full h-auto rounded-lg border"
-        />
+        <div className="preview-shell">
+          <img
+            src={imageUrl}
+            alt="Generated food scene"
+            className="preview-image"
+          />
+        </div>
       )}
     </div>
   );

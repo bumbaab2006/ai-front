@@ -1,55 +1,78 @@
 "use client";
 import { useState } from "react";
 import ResultCard from "./ResultCard";
+import { getApiUrl, parseJsonResponse } from "@/lib/api";
 
 export default function IngredientRecognition() {
   const [dish, setDish] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const generate = async () => {
+    const trimmedDish = dish.trim();
+    if (!trimmedDish) return;
+
     setLoading(true);
     setResult("");
+    setError("");
 
     try {
-      const res = await fetch("https://ai-back-h30s.onrender.com/ingredient", {
+      const res = await fetch(getApiUrl("/ingredient"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dish }),
+        body: JSON.stringify({ dish: trimmedDish }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await parseJsonResponse(res);
       setResult(data.text);
     } catch (e) {
-      alert(e.message);
+      setError(e.message || "Failed to recognize ingredients.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="border border-gray-400 rounded-xl p-5 w-full max-w-md bg-white shadow-sm">
-      <p className="text-sm font-semibold mb-2 text-gray-400">
-        Ingredient recognition
-      </p>
+    <div className="feature-card">
+      <div className="feature-header">
+        <div>
+          <h2 className="feature-title">Ingredient Recognition</h2>
+          <p className="feature-description">
+            Enter a dish name and get a quick ingredient list back.
+          </p>
+        </div>
+        <span className="subtle-badge">Text Prompt</span>
+      </div>
 
       <input
         value={dish}
         onChange={(e) => setDish(e.target.value)}
-        placeholder="Dish name"
-        className="border-gray-400 border rounded-md p-2 w-full text-sm mb-4 text-gray-600"
+        placeholder="Try: truffle pasta, chicken salad, ramen"
+        className="input-field"
       />
 
-      <button
-        onClick={generate}
-        className="bg-gray-600 text-white px-4 py-1.5 rounded-md text-sm"
-        disabled={loading}
-      >
-        {loading ? "Working..." : "Generate"}
-      </button>
+      <div className="helper-row">
+        <span className="meta-text">
+          Best for food dish names instead of long paragraphs.
+        </span>
+        <button
+          type="button"
+          onClick={generate}
+          className="primary-button"
+          disabled={loading || !dish.trim()}
+        >
+          {loading ? "Working..." : "List Ingredients"}
+        </button>
+      </div>
 
-      {result && <ResultCard text={result} />}
+      {error && (
+        <div className="inline-error" role="alert">
+          {error}
+        </div>
+      )}
+
+      <ResultCard text={result} label="Ingredients" />
     </div>
   );
 }

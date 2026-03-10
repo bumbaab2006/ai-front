@@ -1,65 +1,106 @@
 "use client";
 import { useState } from "react";
+import { getApiUrl, parseJsonResponse } from "@/lib/api";
 
 export default function ChatAssistant() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const sendMessage = async () => {
-    if (!input) return;
-    setMessages([...messages, { role: "user", text: input }]);
+    const message = input.trim();
+    if (!message || loading) return;
+
+    setMessages((prev) => [...prev, { role: "user", text: message }]);
+    setInput("");
+    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch("https://ai-back-h30s.onrender.com/chat", {
+      const res = await fetch(getApiUrl("/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message }),
       });
-      const data = await res.json();
+
+      const data = await parseJsonResponse(res);
       setMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
-      setInput("");
     } catch (e) {
-      alert(e.message);
+      setError(e.message || "Failed to generate a reply.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="border border-gray-400 rounded-xl p-4 w-full max-w-md flex flex-col gap-2">
-      <div className="flex flex-col gap-2 h-64 overflow-y-auto">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`p-2 rounded-md text-sm ${
-              m.role === "user"
-                ? "bg-gray-500 self-end"
-                : "bg-gray-400 self-start"
-            }`}
-          >
-            {m.text}
-          </div>
-        ))}
-        {loading && (
-          <div className="text-xs text-gray-400">Assistant is typing...</div>
-        )}
+    <div className="feature-card">
+      <div className="feature-header">
+        <div>
+          <h2 className="feature-title">Chat Assistant</h2>
+          <p className="feature-description">
+            Ask for recipe ideas, ingredient alternatives, or food-related help.
+          </p>
+        </div>
+        <span className="subtle-badge">Quick Chat</span>
       </div>
-      <div className="flex gap-2 mt-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="flex-1 border rounded-md p-2 text-sm text-gray-500"
-          placeholder="Type a message..."
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-gray-600 text-white px-4 py-1.5 rounded-md text-sm"
-          disabled={loading}
-        >
-          Send
-        </button>
+
+      <div className="chat-shell">
+        <div className="chat-messages">
+          {messages.length === 0 && (
+            <div className="empty-state">
+              Start with a simple food question. For example: suggest a quick
+              salmon dinner or explain what pairs well with miso.
+            </div>
+          )}
+
+          {messages.map((message, index) => (
+            <div
+              key={`${message.role}-${index}`}
+              className={`chat-bubble ${message.role}`}
+            >
+              {message.text}
+            </div>
+          ))}
+
+          {loading && (
+            <span className="loading-pill" aria-live="polite">
+              <span className="dot" />
+              <span className="dot" />
+              <span className="dot" />
+              Assistant is typing
+            </span>
+          )}
+        </div>
+
+        {error && (
+          <div className="inline-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="chat-input-row">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="input-field chat-input"
+            placeholder="Ask something about food..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={sendMessage}
+            className="primary-button"
+            disabled={loading || !input.trim()}
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );

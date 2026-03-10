@@ -1,11 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function ResultCard({ text }) {
+export default function ResultCard({ text, label = "Result" }) {
   const [displayedText, setDisplayedText] = useState("");
 
   useEffect(() => {
     if (!text) return setDisplayedText("");
+    if (text.length > 700) {
+      setDisplayedText(text);
+      return;
+    }
 
     let index = 0;
     setDisplayedText("");
@@ -21,11 +25,9 @@ export default function ResultCard({ text }) {
   if (!text) return null;
 
   return (
-    <div className="mt-4 w-full">
-      <p className="text-sm font-semibold mb-1 text-gray-400">Result</p>
-      <div className="border rounded-lg p-3 bg-gray-50 text-xs text-gray-600 font-mono whitespace-pre-wrap">
-        {displayedText}
-      </div>
+    <div className="result-card">
+      <p className="result-label">{label}</p>
+      <p className="result-content">{displayedText}</p>
     </div>
   );
 }

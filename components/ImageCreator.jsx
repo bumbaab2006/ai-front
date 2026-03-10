@@ -46,7 +46,7 @@ export default function ImageCreator() {
             Generate a food scene from a short prompt and preview it immediately.
           </p>
         </div>
-        <span className="subtle-badge">Stable Diffusion</span>
+        <span className="subtle-badge">Gemini Image</span>
       </div>
 
       <textarea
